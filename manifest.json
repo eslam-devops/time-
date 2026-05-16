@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://twemoji.maxcdn.com/v/latest/192x192/1f680.png",
+      "src": "data:image/png;base64,هنا_تضع_نص_Base64",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://twemoji.maxcdn.com/v/latest/512x512/1f680.png",
+      "src": "data:image/png;base64,هنا_تضع_نص_Base64",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
