@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 نومك فَلك - منظم النوم والاستيقاظ</title>
+    
+    <!-- PWA Meta -->
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="نومك فلك">
+    <link rel="apple-touch-icon" href="https://twemoji.maxcdn.com/v/latest/192x192/1f680.png">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', 'Amiri', sans-serif;
+            background: #0f0f23;
+            background-image: 
+                radial-gradient(ellipse at 50% 20%, rgba(106,90,205,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(72,61,139,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 20% 50%, rgba(123,104,238,0.08) 0%, transparent 40%);
+            min-height: 100vh;
+            color: #e0e0ff;
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* نجوم متحركة */
+        .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 70% 10%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1.5px 1.5px at 15% 60%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 85% 30%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.2), transparent);
+        }
+        
+        .container { max-width: 600px; margin: 0 auto; padding: 12px; position: relative; z-index: 1; }
+        
+        /* الهيدر */
+        .header {
+            text-align: center;
+            padding: 20px 16px 10px;
+        }
+        .header-icon {
+            font-size: 56px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%,100%{ transform: translateY(0); }
+            50%{ transform: translateY(-8px); }
+        }
+        .header h1 {
+            font-family: 'Amiri', serif;
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #c9b8ff;
+            margin: 4px 0;
+            text-shadow: 0 2px 10px rgba(150,120,255,0.3);
+        }
+        .header .subtitle {
+            font-size: 0.9em;
+            color: #9088b0;
+        }
+        
+        /* الساعة الكبيرة */
+        .live-clock {
+            background: linear-gradient(145deg, #16163a, #1e1e4a);
+            border-radius: 20px;
+            padding: 18px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(150,130,220,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .live-clock::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 100px; height: 100px;
+            background: radial-gradient(circle, rgba(180,150,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .clock-label {
+            font-size: 0.85em;
+            color: #9088b0;
+            margin-bottom: 4px;
+        }
+        .clock-time {
+            font-family: 'Cairo', sans-serif;
+            font-size: 3.5em;
+            font-weight: 800;
+            color: #e8e0ff;
+            letter-spacing: 2px;
+            direction: ltr;
+        }
+        .clock-date {
+            font-size: 0.95em;
+            color: #b0a0d0;
+            margin-top: 2px;
+        }
+        
+        /* بطاقات الأحداث */
+        .events-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .event-card {
+            background: linear-gradient(145deg, #181840, #202050);
+            border-radius: 16px;
+            padding: 14px 12px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border: 1px solid rgba(150,130,220,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .event-card:hover {
+            border-color: rgba(180,150,255,0.3);
+            transform: translateY(-2px);
+        }
+        .event-emoji { font-size: 2em; display: block; margin-bottom: 4px; }
+        .event-title { font-size: 0.85em; color: #b0a0d0; }
+        .event-time { font-family: 'Cairo', sans-serif; font-size: 1.4em; font-weight: 700; color: #e8e0ff; direction: ltr; }
+        .event-countdown { font-size: 0.75em; color: #7b68ee; margin-top: 2px; }
+        .event-card.active {
+            border-color: #7b68ee;
+            box-shadow: 0 0 20px rgba(123,104,238,0.3);
+        }
+        
+        /* شريط تقدم اليوم */
+        .progress-section {
+            background: #181840;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .progress-label {
+            font-size: 0.85em;
+            color: #9088b0;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-bar-wrap {
+            background: #2a2a55;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        .progress-phases {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7em;
+            color: #9088b0;
+        }
+        
+        /* قسم المنبهات */
+        .alarms-section {
+            background: linear-gradient(145deg, #181840, #202050);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .section-title {
+            font-family: 'Amiri', serif;
+            font-size: 1.3em;
+            color: #c9b8ff;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .alarm-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .alarm-label {
+            flex: 1;
+            min-width: 80px;
+            font-size: 0.9em;
+            color: #c0b0e0;
+        }
+        .alarm-time-input {
+            background: #2a2a55;
+            border: 1px solid #3a3a6a;
+            color: #e8e0ff;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            width: 100px;
+            text-align: center;
+            direction: ltr;
+        }
+        .btn {
+            background: #6c5ce7;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85em;
+        }
+        .btn:hover { background: #7c6cf7; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #6c5ce7;
+            color: #6c5ce7;
+        }
+        .btn-outline:hover { background: rgba(108,92,231,0.1); }
+        
+        /* تذييل */
+        .footer {
+            text-align: center;
+            padding: 16px;
+            color: #605880;
+            font-size: 0.8em;
+        }
+        
+        /* زر التثبيت */
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+            background: #7b68ee;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 22px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            box-shadow: 0 6px 20px rgba(123,104,238,0.4);
+            cursor: pointer;
+            display: none;
+            animation: pulse-btn 2s infinite;
+        }
+        @keyframes pulse-btn {
+            0%,100%{ box-shadow: 0 6px 20px rgba(123,104,238,0.4); }
+            50%{ box-shadow: 0 6px 30px rgba(123,104,238,0.7); }
+        }
+        
+        /* تجاوب */
+        @media (max-width: 400px) {
+            .clock-time { font-size: 2.5em; }
+            .events-grid { grid-template-columns: 1fr; }
+            .alarm-row { flex-direction: column; align-items: stretch; }
+            .alarm-time-input { width: 100%; }
+        }
+    </style>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="stars"></div>
+    
+    <div class="container">
+        <!-- الهيدر -->
+        <header class="header">
+            <span class="header-icon">🚀</span>
+            <h1>نومك فَلك</h1>
+            <p class="subtitle">﴿ وَجَعَلْنَا نَوْمَكُمْ سُبَاتًا ﴾</p>
+        </header>
+        
+        <!-- الساعة الحية -->
+        <div class="live-clock">
+            <div class="clock-label">الوقت الآن</div>
+            <div class="clock-time" id="liveTime">--:--:--</div>
+            <div class="clock-date" id="liveDate">---</div>
+        </div>
+        
+        <!-- بطاقات الأحداث -->
+        <div class="events-grid" id="eventsGrid">
+            <!-- تُملأ ديناميكياً -->
+        </div>
+        
+        <!-- شريط تقدم اليوم -->
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>📊 تقدم اليوم</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-phases">
+                <span>🌙 نوم</span>
+                <span>🕌 فجر</span>
+                <span>💼 عمل</span>
+                <span>🏠 منزل</span>
+            </div>
+        </div>
+        
+        <!-- قسم ضبط المواعيد -->
+        <div class="alarms-section">
+            <div class="section-title">⚙️ ضبط مواعيدك</div>
+            <div class="alarm-row">
+                <span class="alarm-label">🌙 وقت النوم</span>
+                <input type="time" class="alarm-time-input" id="sleepTime" value="22:00">
+            </div>
+            <div class="alarm-row">
+                <span class="alarm-label">🕌 صلاة الفجر</span>
+                <input type="time" class="alarm-time-input" id="fajrTime" value="05:00">
+            </div>
+            <div class="alarm-row">
+                <span class="alarm-label">💼 الذهاب للعمل</span>
+                <input type="time" class="alarm-time-input" id="workTime" value="08:00">
+            </div>
+            <div class="alarm-row">
+                <span class="alarm-label">🏠 العودة للمنزل</span>
+                <input type="time" class="alarm-time-input" id="homeTime" value="16:00">
+            </div>
+            <button class="btn" onclick="saveSettings()" style="width:100%;margin-top:8px;">💾 حفظ الإعدادات</button>
+            <p style="font-size:0.7em;color:#9088b0;margin-top:6px;text-align:center;">
+                🔔 عند تفعيل الإشعارات، سيتم تنبيهك قبل كل موعد بـ 5 دقائق
+            </p>
+        </div>
+        
+        <footer class="footer">
+            <p>🚀 نومك فَلك · اضبط نومك تصل للفلك</p>
+        </footer>
+    </div>
+    
+    <!-- زر تثبيت التطبيق -->
+    <button class="install-btn" id="installBtn">📲 تثبيت التطبيق</button>
+
+    <script>
+        // ======== الإعدادات الافتراضية ========
+        const defaultSettings = {
+            sleep: '22:00',
+            fajr: '05:00',
+            work: '08:00',
+            home: '16:00'
+        };
+        
+        let settings = JSON.parse(localStorage.getItem('nawmok_falak_settings')) || defaultSettings;
+        
+        // تحميل الإعدادات في الحقول
+        document.getElementById('sleepTime').value = settings.sleep;
+        document.getElementById('fajrTime').value = settings.fajr;
+        document.getElementById('workTime').value = settings.work;
+        document.getElementById('homeTime').value = settings.home;
+        
+        function saveSettings() {
+            settings.sleep = document.getElementById('sleepTime').value;
+            settings.fajr = document.getElementById('fajrTime').value;
+            settings.work = document.getElementById('workTime').value;
+            settings.home = document.getElementById('homeTime').value;
+            localStorage.setItem('nawmok_falak_settings', JSON.stringify(settings));
+            alert('✅ تم حفظ الإعدادات بنجاح');
+            updateAll();
+        }
+        
+        // ======== الساعة الحية ========
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            document.getElementById('liveTime').textContent = timeStr;
+            
+            const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('liveDate').textContent = dateStr;
+        }
+        
+        // ======== حساب الفترات ========
+        function parseTime(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m; // دقائق من منتصف الليل
+        }
+        
+        function formatTime(minutes) {
+            const h = Math.floor(minutes / 60) % 24;
+            const m = minutes % 60;
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        }
+        
+        function formatDuration(minutes) {
+            if (minutes < 0) return 'انتهى';
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            if (h > 0) return `${h} س ${m} د`;
+            return `${m} دقيقة`;
+        }
+        
+        function updateAll() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            const sleepMin = parseTime(settings.sleep);
+            const fajrMin = parseTime(settings.fajr);
+            const workMin = parseTime(settings.work);
+            const homeMin = parseTime(settings.home);
+            
+            // حساب مدة النوم (من وقت النوم إلى الفجر)
+            let sleepDuration = fajrMin - sleepMin;
+            if (sleepDuration < 0) sleepDuration += 24 * 60;
+            
+            // حساب الوقت المتبقي على كل حدث
+            let remainingSleep = sleepMin - currentMinutes;
+            if (remainingSleep < 0) remainingSleep += 24 * 60;
+            let remainingFajr = fajrMin - currentMinutes;
+            if (remainingFajr < 0) remainingFajr += 24 * 60;
+            let remainingWork = workMin - currentMinutes;
+            if (remainingWork < 0) remainingWork += 24 * 60;
+            let remainingHome = homeMin - currentMinutes;
+            if (remainingHome < 0) remainingHome += 24 * 60;
+            
+            // حساب تقدم اليوم
+            const dayStart = sleepMin - 60; // قبل النوم بساعة
+            let dayEnd = homeMin;
+            if (dayEnd < dayStart) dayEnd += 24 * 60;
+            let currentForProgress = currentMinutes;
+            if (currentForProgress < dayStart) currentForProgress += 24 * 60;
+            const totalDay = dayEnd - dayStart;
+            const elapsed = Math.max(0, currentForProgress - dayStart);
+            const progress = Math.min(100, Math.round((elapsed / totalDay) * 100));
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressPercent').textContent = progress + '%';
+            
+            // بناء بطاقات الأحداث
+            const events = [
+                { emoji: '🌙', title: 'النوم', time: settings.sleep, remaining: remainingSleep, desc: `نم ${formatDuration(sleepDuration)}` },
+                { emoji: '🕌', title: 'صلاة الفجر', time: settings.fajr, remaining: remainingFajr, desc: 'قم للصلاة' },
+                { emoji: '💼', title: 'العمل', time: settings.work, remaining: remainingWork, desc: 'انطلق للعمل' },
+                { emoji: '🏠', title: 'العودة', time: settings.home, remaining: remainingHome, desc: 'انتهى الدوام' }
+            ];
+            
+            let html = '';
+            events.forEach(ev => {
+                const isActive = ev.remaining <= 120 && ev.remaining > 0; // خلال ساعتين
+                html += `
+                <div class="event-card ${isActive ? 'active' : ''}">
+                    <span class="event-emoji">${ev.emoji}</span>
+                    <div class="event-title">${ev.title}</div>
+                    <div class="event-time">${ev.time}</div>
+                    <div class="event-countdown">⏳ ${formatDuration(ev.remaining)}</div>
+                    <div style="font-size:0.7em;color:#9088b0;">${ev.desc}</div>
+                </div>`;
+            });
+            document.getElementById('eventsGrid').innerHTML = html;
+            
+            // تفعيل المنبه (إشعار إذا كان الوقت الحالي = وقت الحدث - 5 دقائق)
+            checkAlarms(currentMinutes, sleepMin, fajrMin, workMin, homeMin);
+        }
+        
+        // ======== المنبهات ========
+        let alarmFired = { sleep: false, fajr: false, work: false, home: false };
+        
+        function checkAlarms(current, sleep, fajr, work, home) {
+            const check = (eventMin, key, label) => {
+                const diff = eventMin - current;
+                if (diff === 5 && !alarmFired[key]) {
+                    alarmFired[key] = true;
+                    showNotification(label, eventMin);
+                }
+                if (diff > 10) alarmFired[key] = false; // إعادة التفعيل لليوم التالي
+            };
+            
+            check(sleep, 'sleep', 'موعد النوم');
+            check(fajr, 'fajr', 'صلاة الفجر');
+            check(work, 'work', 'الذهاب للعمل');
+            check(home, 'home', 'العودة للمنزل');
+        }
+        
+        function showNotification(title, minutes) {
+            if (Notification.permission === 'granted') {
+                new Notification('🚀 نومك فلك', {
+                    body: `🔔 ${title} بعد 5 دقائق (${formatTime(minutes)})`,
+                    icon: 'https://twemoji.maxcdn.com/v/latest/72x72/1f680.png'
+                });
+            }
+        }
+        
+        // طلب إذن الإشعارات
+        function requestNotificationPermission() {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+        
+        // ======== PWA زر التثبيت ========
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`تثبيت: ${outcome}`);
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+            console.log('✅ تم تثبيت التطبيق');
+        });
+        
+        // ======== التحديث الدوري ========
+        setInterval(() => {
+            updateClock();
+            updateAll();
+        }, 1000);
+        
+        // أول تحديث
+        updateClock();
+        updateAll();
+        requestNotificationPermission();
+        
+        // تسجيل Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ SW مسجل'))
+                .catch(err => console.warn('⚠️ SW فشل', err));
+        }
+    </script>
+</body>
+</html>
